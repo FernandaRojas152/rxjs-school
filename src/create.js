@@ -6,7 +6,7 @@ export default () => {
     const hello = Observable.create(function(observer) {
         observer.next('Hello');
         setTimeout(()=>{
-            observer.next('World');
+            observer.next('World! :D');
         }, 2000);
     });
     
