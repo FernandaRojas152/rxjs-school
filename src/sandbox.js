@@ -25,7 +25,7 @@ export default () => {
             const docHeight = docElement.scrollHeight - docElement.clientHeight;
             return (evt / docHeight) * 100;
         }),
-        share(),
+        share()
     )
 
     //subscribe to scroll progress to paint a progress bar
