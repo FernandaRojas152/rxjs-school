@@ -1,5 +1,5 @@
 import { updateDisplay } from './utils';
-import { fromEvent } from 'rxjs';
+import { fromEvent, BehaviorSubject } from 'rxjs';
 import { map, tap, share } from 'rxjs/operators';
 
 export default () => {
@@ -28,11 +28,14 @@ export default () => {
         share()
     )
 
+    const scrollProgressHot$= new BehaviorSubject(0);
+    scrollProgress$.subscribe(scrollProgressHot$);
+
     //subscribe to scroll progress to paint a progress bar
-    const subscription = scrollProgress$.subscribe(updateProgressBar);
+    const subscription = scrollProgressHot$.subscribe(updateProgressBar);
 
     //subscribe to display scroll progress percentage
-    const subscription2 = scrollProgress$.subscribe(
+    const subscription2 = scrollProgressHot$.subscribe(
         val => updateDisplay(`${ Math.floor(val) } %`)
     );
 
