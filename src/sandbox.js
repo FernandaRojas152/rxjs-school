@@ -4,7 +4,6 @@ import { debounceTime, map } from 'rxjs/operators';
 
 export default () => {
     /** start coding */
-    
     const inputBox = document.getElementById('input-box');
     fromEvent(inputBox, "input")
         .pipe(
