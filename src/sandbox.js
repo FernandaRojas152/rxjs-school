@@ -1,6 +1,6 @@
 import { updateDisplay, displayLog } from './utils';
-import { fromEvent } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { fromEvent, zip, merge } from 'rxjs';
+import { map, tap, scan, filter, distinctUntilChanged } from 'rxjs/operators';
 
 export default () => {
     /** start coding */
@@ -22,7 +22,7 @@ export default () => {
     }
 
     /** helper method to retrieve local coords from click */
-    const getLocalClickCoords = (event, parent) =>{
+    const getLocalClickCoords = (event, parent) => {
         return {
             x: event.clientX - parent.offsetLeft,
             y: event.clientY - parent.offsetTop,
@@ -36,7 +36,7 @@ export default () => {
                 label: 'start',
                 coords: getLocalClickCoords(event, canvas)
             }
-        }));
+    }));
 
     /** observable from canvas mouse up events */
     const mouseEnd$ = fromEvent(canvas, 'mouseup').pipe(
@@ -45,7 +45,7 @@ export default () => {
                 label: 'end',
                 coords: getLocalClickCoords(event, canvas)
             }
-        }));
+    }));
 
     /** observable from canvas mouse move events */
     const mouseMove$ = fromEvent(canvas, 'mousemove').pipe(
@@ -54,12 +54,49 @@ export default () => {
                 label: 'drawing',
                 coords: getLocalClickCoords(event, canvas)
             }
-        }));        
+    }));
 
 
     //TODO: draw current line
 
+    /* const drawLine$ = zip(mouseStart$, mouseEnd$)
+            .pipe(
+                tap(console.log),
+                map(([start, end]) => {
+                    return {
+                        origin: start.coords,
+                        end: end.coords
+                    }
+                })
+        ).subscribe(data=> drawLine(data.origin, data.end));
+    */
+
     
+    const computeDrawState= (prevState, event)=>{
+        switch(prevState.label){
+            case 'init':
+            case 'end':
+                if(event.label== 'start'){
+                    return {origin:event.coords, ...event}
+                }
+                break;
+            case 'start':
+            case 'drawing':
+                return {origin:prevState.origin, ...event}
+        };
+        return prevState;
+    };
+
+    const drawLine$ = merge(mouseStart$, mouseMove$, mouseEnd$)
+        .pipe(
+            scan(computeDrawState,{label: 'init'}),
+            filter(data=> data.origin && data.coords),
+            distinctUntilChanged(),
+            tap(console.log)
+    )
+
+    drawLine$.subscribe(data => drawLine(data.origin, data.coords));
+
 
     /** end coding */
 }
