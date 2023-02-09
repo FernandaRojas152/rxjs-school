@@ -1,38 +1,32 @@
-import { updateDisplay, displayLog } from './utils';
-
-import { fromEvent, combineLatest } from 'rxjs';
-import { map, debounceTime, withLatestFrom } from 'rxjs/operators';
+import { updateDisplay } from './utils';
+import { fromEvent, interval } from 'rxjs';
+import { mapTo, scan, takeWhile  } from 'rxjs/operators';
 
 export default () => {
     /** start coding */
+
+    /** number of seconds to init countdown */
+    const countdownSeconds = 10;
     
-    /** get the form element */
-    const form = document.getElementById('form');
-    
-    /** get observables from each form element */
-    const formName$ = fromEvent(form.name, 'input').pipe(
-        debounceTime(400),
-        map(evt => evt.target.value)
+    /** access interface buttons */
+    const pauseButton = document.getElementById('pause-btn');
+    const resumeButton = document.getElementById('resume-btn');
+
+    /** get comments on button click */
+    const pause$ = fromEvent(pauseButton, 'click');
+    const resume$ = fromEvent(resumeButton, 'click');
+
+    /** 1s negative interval */
+    const interval$ = interval(1000).pipe(mapTo(-1));
+
+    /** countdown timer */
+    const countdown$ = interval$.pipe(
+        scan((acc, curr) => ( curr ? curr + acc : curr ), countdownSeconds),
+        takeWhile(v => v >= 0)
     );
-    const formEmail$ = fromEvent(form.email, 'input').pipe(
-        debounceTime(400),
-        map(evt => evt.target.value)
-    );
-    const formNumber$ = fromEvent(form.phone, 'input').pipe(
-        debounceTime(400),
-        map(evt => evt.target.value)
-    );
-    const submitButton$ = fromEvent(form.btn, 'click');
-    
-    //const formData$= combineLatest(formName$, formEmail$, formNumber$).subscribe(displayLog);
-    const formData$= submitButton$.pipe(
-        withLatestFrom(formName$, formEmail$, formNumber$),
-        map(data=> {
-            const [click, ...formData]= data;
-            return formData;
-        })
-    ).subscribe(displayLog);
-    
+
+    /** subscribe to countdown */
+    countdown$.subscribe(updateDisplay);
 
     /** end coding */
 }
